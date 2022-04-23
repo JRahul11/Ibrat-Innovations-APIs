@@ -5,11 +5,12 @@ from plans.models import PlanModel
 from subscriptions.models import SubscriptionModel
 from subscriptions.serializers import ValidationSerializer
 
-
+# Accepts POST Request
 class RechargePlan(APIView):
 
 
     def post(self, request):
+        # Validate data using Serializer
         validateSerializer = ValidationSerializer(data = request.data)
 
         if validateSerializer.is_valid():
@@ -17,11 +18,15 @@ class RechargePlan(APIView):
             plan_id = validateSerializer.data['plan_id']
 
             try:
-                user = UserModel.objects.get(phone_number=phone_number)
+                # Get user reference
+                user = UserModel.objects.get(phone_number=phone_number)                         
+                # Get plan reference
                 plan = PlanModel.objects.get(id=plan_id)
 
                 try:
+                    # Check if user has an active plan
                     subscription = SubscriptionModel.objects.get(user=user, is_active=True)
+                    # Create a new upcoming plan
                     SubscriptionModel.objects.create(user=user, plan=plan, is_active=False)
                     return Response(
                         {
@@ -31,6 +36,7 @@ class RechargePlan(APIView):
                         status = 200
                     )
                 except:
+                    # Create a new active plan
                     SubscriptionModel.objects.create(user=user, plan=plan, is_active=True)
                     return Response(
                         {
@@ -40,12 +46,12 @@ class RechargePlan(APIView):
                         status = 200
                     )
 
-            except Exception as e:
+            # If user or plan does not exist
+            except:
                 return Response(
                     {
                         'status': 'Error',
                         'message': 'User or Plan does not exist',
-                        'error_msg': str(e)
                     },
                     status = 500
                 )

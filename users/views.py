@@ -13,18 +13,20 @@ class Welcome(APIView):
         return Response('Welcome to Ibrat Innovation APIs by Rahul Jadhav')
 
 
-
+# Accepts POST request
 class AddUser(APIView):
     
     
     def post(self, request):
         addUserSerializer = AddUserSerializer(data = request.data)
         
+        # Data Validation using Serializer
         if addUserSerializer.is_valid():
             name = addUserSerializer.data['name']
             phone_number = addUserSerializer.data['phone_number']
             
             try:
+                # Check if user exists
                 user = UserModel.objects.get(phone_number = phone_number)
                 return Response(
                     {
@@ -34,6 +36,7 @@ class AddUser(APIView):
                     status = 500
                 )
             except:
+                # Create new User
                 UserModel.objects.create(name=name, phone_number=phone_number)
                 return Response(
                     {
@@ -53,10 +56,10 @@ class AddUser(APIView):
             )
 
 
-
+# Accepts POST request
 class ViewUserPlan(APIView):
 
-
+    # Creates Key Value object for plan
     def createPlanJson(self, userPlan):
         object  = {
             'id': userPlan.plan.id,
@@ -71,7 +74,7 @@ class ViewUserPlan(APIView):
         }
         return object
 
-
+    # Sorts plan in different category
     def sortPlans(self, userPlan, activePlanList, upcomingPlanList):
         if not userPlan.is_active:
             upcomingPlanList.append(self.createPlanJson(userPlan))
@@ -85,8 +88,10 @@ class ViewUserPlan(APIView):
         phone_number = request.data['phone_number']
         
         try:
+            # Check if user exists
             user = UserModel.objects.get(phone_number=phone_number)
             try:
+                # Get all user's subscriptions
                 userPlans = SubscriptionModel.objects.filter(user=user)
                 for userPlan in userPlans:
                     self.sortPlans(userPlan, activePlanList, upcomingPlanList)
@@ -99,6 +104,7 @@ class ViewUserPlan(APIView):
                     status = 200
                 )
             except:
+                # User dont have any subscription
                 return Response(
                     {
                         'status': 'Success',
@@ -108,6 +114,7 @@ class ViewUserPlan(APIView):
                 )
 
         except:
+            # User doesnt exists
             return Response(
                 {
                     'status': 'Error',
